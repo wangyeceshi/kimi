@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>智慧农业·终极驾驶舱</title>
+  <meta name="theme-color" content="#001e0d">
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi6aaZ5paZ5LyB5Lia5bmz5Y+wIiwic2hvcnRfbmFtZSI6IuaZr5jq8SIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMDAxZTBkIiwidGhlbWVfY29sb3IiOiIjMDBjODUzIn0=">
+  <style>
+  /*  ==========  Design System  ==========  */
+  :root{
+    --primary:#00c853;--danger:#ff3b30;--warn:#ffcc00;--info:#0a84ff;
+    --bg0:#0a0f0d;--bg1:#121812;--bg2:#1a211a;--glass:rgba(26,33,26,.45);
+    --text:#e0ffe0;--text2:#a0c0a0;--border:rgba(0,200,83,.18);
+    --radius:14px;--shadow:0 8px 24px rgba(0,0,0,.6);
+    --font:"SF Pro","HarmonyOS","Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+  }
+  html.light{
+    --bg0:#f5faf5;--bg1:#ffffff;--bg2:#f0f7f0;
+    --text:#112211;--text2:#446644;--glass:rgba(255,255,255,.55);
+    --border:rgba(0,200,83,.25);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:var(--font);}
+  body{background:var(--bg0);color:var(--text);overflow:hidden;font-size:14px;-webkit-font-smoothing:antialiased;}
+  #app{display:flex;height:100vh;flex-direction:column;}
+  /* 顶部栏 */
+  .navbar{height:52px;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;flex-shrink:0;z-index:100;}
+  .navbar .logo{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px;color:var(--primary);}
+  .navbar .actions{margin-left:auto;display:flex;align-items:center;gap:12px;}
+  .navbar .icon-btn{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg2);cursor:pointer;transition:.2s;color:var(--text);}
+  .navbar .icon-btn:hover{background:var(--primary);color:#000;}
+  /* 底栏（移动端） */
+  .tabbar{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--glass);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:99;}
+  /* 侧边栏 */
+  .sidebar{width:240px;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .3s;flex-shrink:0;}
+  .sidebar.collapsed{width:56px;}
+  .sidebar .search{padding:12px;}
+  .sidebar .search input{width:100%;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text);}
+  .menu{flex:1;overflow-y:auto;padding:8px 0;}
+  .menu-item{display:flex;align-items:center;padding:10px 16px;cursor:pointer;border-radius:var(--radius);margin:0 8px;transition:.2s;color:var(--text2);}
+  .menu-item:hover{background:var(--primary);color:#000;}
+  .menu-item.active{background:var(--primary);color:#000;font-weight:600;}
+  .menu-item i{width:20px;margin-right:12px;text-align:center;}
+  .sidebar.collapsed .search,.sidebar.collapsed .menu-text{display:none;}
+  /* 主内容 */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+  .header{padding:16px;background:var(--bg1);border-bottom:1px solid var(--border);}
+  .content{flex:1;padding:16px;overflow:auto;display:flex;flex-direction:column;gap:16px;background:var(--bg0);}
+  /* 卡片 */
+  .card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);}
+  .card-title{font-size:16px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  /* 网格 */
+  .grid{display:grid;gap:16px;}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .grid.cols-4{grid-template-columns:repeat(4,1fr);}
+  @media(max-width:900px){.grid.cols-4{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:600px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr;}}
+  /* 指标 */
+  .metric{background:linear-gradient(135deg,var(--primary),#64dd17);color:#000;padding:20px;border-radius:var(--radius);text-align:center;position:relative;overflow:hidden;}
+  .metric .value{font-size:32px;font-weight:700;}
+  .metric .label{font-size:14px;opacity:.8;}
+  /* 图表 */
+  .chart{height:260px;background:var(--bg2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--text2);}
+  /* 控制开关 */
+  .switch{position:relative;display:inline-block;width:40px;height:20px;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--bg2);transition:.3s;border-radius:20px;}
+  .slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:#fff;transition:.3s;border-radius:50%;}
+  input:checked+.slider{background:var(--primary);}
+  input:checked+.slider:before{transform:translateX(20px);}
+  /* 按钮 */
+  .btn{padding:6px 14px;border-radius:20px;border:none;background:var(--primary);color:#000;font-weight:600;cursor:pointer;transition:.2s;}
+  .btn:hover{filter:brightness(1.1);}
+  .btn.danger{background:var(--danger);}
+  /* 表单 */
+  .form-group{margin-bottom:12px;}
+  .form-group label{display:block;margin-bottom:4px;font-size:13px;color:var(--text2);}
+  .form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);}
+  /* 表格 */
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:8px;text-align:left;border-bottom:1px solid var(--border);}
+  th{color:var(--primary);}
+  /* 模态框 */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:.3s;}
+  .modal.show{opacity:1;pointer-events:auto;}
+  .modal-content{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:20px;max-width:90%;max-height:90%;overflow:auto;width:600px;}
+  /* 加载 */
+  .loader{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;margin:auto;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  /* 响应式 */
+  @media(max-width:768px){
+    .sidebar{position:fixed;left:-240px;top:52px;bottom:60px;z-index:98;background:var(--bg1);box-shadow:var(--shadow);}
+    .sidebar.show{left:0;}
+    .tabbar{display:flex;justify-content:space-around;align-items:center;}
+    .main{padding-bottom:60px;}
+  }
+  /* 打印 */
+  @media print{
+    .navbar,.sidebar,.tabbar,.no-print{display:none!important;}
+    body{background:#fff;color:#000;}
+    .card{box-shadow:none;border:1px solid #ccc;margin-bottom:12px;}
+  }
+  </style>
+
+  <!--  =====  动态背景（Vanta.js WebGL） =====  -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js"></script>
+
+  <!--  =====  图表 / 表格 / 日历 / 导出  =====  -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1/qrcode.min.js"></script>
+
+  <!--  =====  地图（高德） =====  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1/dist/leaflet.js"></script>
+  <script src="https://webapi.amap.com/maps?v=2.0&key=您的高德key&plugin=AMap.Geocoder,AMap.Weather"></script>
+</head>
+<body>
+<div id="app">
+  <!-- 顶部栏 -->
+  <header class="navbar">
+    <div class="logo">
+      <span>🌱</span>
+      <span class="no-print">智慧农业·终极驾驶舱</span>
+    </div>
+    <div class="actions">
+      <div class="icon-btn" onclick="toggleTheme()" title="主题切换">🌓</div>
+      <div class="icon-btn" onclick="toggleLang()" title="中/En">🌐</div>
+      <div class="icon-btn" onclick="toggleFullscreen()" title="全屏">⛶</div>
+      <div class="icon-btn" onclick="screenshot()" title="截屏">📸</div>
+      <div class="icon-btn" onclick="exportExcel()" title="导出">⬇</div>
+      <div class="icon-btn no-print" onclick="toggleSidebar()" title="菜单">☰</div>
+    </div>
+  </header>
+
+  <div style="display:flex;flex:1">
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+      <div class="search">
+        <input id="menuSearch" placeholder="搜索菜单 / Search"/>
+      </div>
+      <nav class="menu" id="menu">
+        <!-- 动态生成 -->
+      </nav>
+    </aside>
+
+    <!-- 主内容 -->
+    <main class="main">
+      <div class="header" id="pageHeader"></div>
+      <div class="content" id="content">
+        <!-- 动态注入 -->
+      </div>
+    </main>
+  </div>
+
+  <!-- 移动端底栏 -->
+  <div class="tabbar no-print">
+    <div class="icon-btn" onclick="nav('dashboard')">📊</div>
+    <div class="icon-btn" onclick="nav('device')">🚁</div>
+    <div class="icon-btn" onclick="nav('map')">🗺️</div>
+    <div class="icon-btn" onclick="nav('task')">📋</div>
+    <div class="icon-btn" onclick="showProfile()">👤</div>
+  </div>
+</div>
+
+<!--  =====  全局状态  =====  -->
+<script>
+/* ---------- 状态管理（极简 Redux） ---------- */
+const store=(()=>{
+  let state=JSON.parse(localStorage.getItem('agri-state'))||{
+    user:{name:'农场主',role:'admin',avatar:'👨‍🌾'},
+    theme:window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark',
+    lang:navigator.language.startsWith('zh')?'zh':'en',
+    menu:[
+      {id:'dashboard',icon:'📊',zh:'仪表盘',en:'Dashboard'},
+      {id:'device',icon:'🚁',zh:'设备孪生',en:'Digital Twin'},
+      {id:'map',icon:'🗺️',zh:'GIS地图',en:'GIS Map'},
+      {id:'ai',icon:'🧠',zh:'AI诊断',en:'AI Diagnosis'},
+      {id:'economy',icon:'💰',zh:'经济测算',en:'Economy'},
+      {id:'calendar',icon:'📅',zh:'农事日历',en:'Calendar'},
+      {id:'stock',icon:'📦',zh:'库存/溯源',en:'Stock & Trace'},
+      {id:'report',icon:'📈',zh:'报表中心',en:'Reports'},
+      {id:'setting',icon:'⚙️',zh:'系统设置',en:'Settings'}
+    ],
+    wsUrl:'wss://echo.websocket.org/',   // 演示用
+    ws:null,
+    logs:[]
+  };
+  const listeners=[];
+  function set(p){Object.assign(state,p);localStorage.setItem('agri-state',JSON.stringify(state));listeners.forEach(l=>l(state));}
+  function get(k){return k?state[k]:state;}
+  function sub(fn){listeners.push(fn);}
+  return{set,get,sub};
+})();
+
+/* ---------- 工具 ---------- */
+const $=s=>document.querySelector(s);
+const t=s=>store.get('lang')==='zh'?s:store.get('lang')==='en'?window._en[s]||s:s;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const toast=(msg)=>{
+  const d=document.createElement('div');d.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--primary);color:#000;padding:8px 16px;border-radius:20px;z-index:300;';
+  d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),2000);
+};
+const confirm=(msg)=>new Promise(res=>res(window.confirm(msg)));
+
+/* ---------- 国际化 ---------- */
+window._en={
+  '仪表盘':'Dashboard','设备孪生':'Digital Twin','GIS地图':'GIS Map','AI诊断':'AI Diagnosis','经济测算':'Economy','农事日历':'Calendar','库存/溯源':'Stock & Trace','报表中心':'Reports','系统设置':'Settings',
+  '空气温度':'Air Temp','空气湿度':'Humidity','土壤pH':'Soil pH','作物状态':'Crop Status',
+  '灌溉系统':'Irrigation','通风系统':'Ventilation','补光系统':'Lighting','温控系统':'Climate',
+  '搜索菜单 / Search':'Search menu','状态':'Status','开启':'On','关闭':'Off',
+  '全屏':'Fullscreen','截屏':'Screenshot','导出':'Export','菜单':'Menu'
+};
+
+/* ---------- 主题 ---------- */
+function applyTheme(){
+  const th=store.get('theme');
+  document.documentElement.className=th;
+  document.querySelector('meta[name="theme-color"]').content=th==='dark'?'#001e0d':'#00c853';
+}
+applyTheme();store.sub(applyTheme);
+function toggleTheme(){store.set({theme:store.get('theme')==='dark'?'light':'dark'});}
+
+/* ---------- 语言 ---------- */
+function toggleLang(){store.set({lang:store.get('lang')==='zh'?'en':'zh'});location.reload();}
+
+/* ---------- 全屏 ---------- */
+function toggleFullscreen(){
+  if(!document.fullscreenElement){document.documentElement.requestFullscreen()}else{document.exitFullscreen()}
+}
+
+/* ---------- 截屏 ---------- */
+function screenshot(){
+  html2canvas(document.body,{useCORS:true,scale:2}).then(c=>{
+    const a=document.createElement('a');a.download='Agri-'+Date.now()+'.png';a.href=c.toDataURL();a.click();
+    toast(t('截屏已保存'));
+  });
+}
+
+/* ---------- 导出 Excel ---------- */
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.json_to_sheet(store.get('logs'));
+  XLSX.utils.book_append_sheet(wb,ws,'logs');
+  XLSX.writeFile(wb,'agri-logs-'+Date.now()+'.xlsx');
+  toast(t('已导出'));
+}
+
+/* ---------- WebSocket 实时 ---------- */
+function initWS(){
+  if(store.get('ws')) return;
+  const ws=new WebSocket(store.get('wsUrl'));
+  ws.onopen=()=>toast('WS 已连接');
+  ws.onmessage=e=>{
+    const d=JSON.parse(e.data);
+    store.set({logs:[...store.get('logs'),{...d,ts:new Date().toLocaleString()}]});
+  };
+  ws.onclose=()=>{toast('WS 断开，5s 重连');setTimeout(initWS,5000)};
+  store.set({ws});
+}
+initWS();
+
+/* ---------- 路由 ---------- */
+const routes={
+  dashboard:()=>importDashboard(),
+  device:()=>importDevice(),
+  map:()=>importMap(),
+  ai:()=>importAI(),
+  economy:()=>importEconomy(),
+  calendar:()=>importCalendar(),
+  stock:()=>importStock(),
+  report:()=>importReport(),
+  setting:()=>importSetting()
+};
+let currentPage='dashboard';
+function nav(id){
+  currentPage=id;
+  routes[id]();
+  $('#pageHeader').innerHTML=`<h2>${store.get('menu').find(m=>m.id===id)[store.get('lang')]}</h2>`;
+  if(window.innerWidth<=768) $('#sidebar').classList.remove('show');
+}
+function toggleSidebar(){
+  $('#sidebar').classList.toggle('show');
+}
+
+/* ---------- 菜单搜索 ---------- */
+$('#menuSearch').oninput=e=>{
+  const kw=e.target.value.toLowerCase();
+  $('#menu').querySelectorAll('.menu-item').forEach(item=>{
+    const txt=(item.textContent||'').toLowerCase();
+    item.style.display=txt.includes(kw)?'flex':'none';
+  });
+};
+
+/* ---------- 初始化菜单 ---------- */
+function renderMenu(){
+  const m=store.get('menu');
+  $('#menu').innerHTML=m.map(it=>`
+    <div class="menu-item ${it.id===currentPage?'active':''}" onclick="nav('${it.id}')">
+      <i>${it.icon}</i>
+      <span class="menu-text">${it[store.get('lang')]}</span>
+    </div>`).join('');
+}
+renderMenu();store.sub(renderMenu);
+
+/* ---------- 默认进入仪表盘 ---------- */
+nav('dashboard');
+
+/* ---------- 动态背景 ---------- */
+VANTA.WAVES({el:'body',mouseControls:!0,touchControls:!0,gyroControls:!1,minHeight:200,minWidth:200,scale:1,scaleMobile:1,color:0x00c853,shininess:35, waveHeight:10, waveSpeed:1, zoom:0.75});
+
+/* ---------- PWA 离线 ---------- */
+if('serviceWorker' in navigator){
+  const sw=`
+  self.addEventListener('install',e=>e.waitUntil(caches.open('agri-v1').then(c=>c.addAll(['./']))));
+  self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+  `;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob));
+}
+  </script>
+
+  <!--  ======================  页面模块  ======================  -->
+  <script>
+  /* ---------- 仪表盘 ---------- */
+  function importDashboard(){
+    $('#content').innerHTML=`
+    <div class="grid cols-4">
+      <div class="metric"><div class="value" id="airTemp">28.5</div><div class="label">${t('空气温度')} °C</div></div>
+      <div class="metric"><div class="value" id="humidity">65</div><div class="label">${t('空气湿度')} %</div></div>
+      <div class="metric"><div class="value" id="ph">6.8</div><div class="label">${t('土壤pH')}</div></div>
+      <div class="metric"><div class="value" id="crop">良好</div><div class="label">${t('作物状态')}</div></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card"><div class="card-title">📈 环境趋势</div><div id="chartTrend" class="chart"></div></div>
+      <div class="card"><div class="card-title">🎮 设备控制</div>
+        <div class="grid cols-2">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg2);border-radius:var(--radius);">
+            <span>💧 ${t('灌溉系统')}</span>
+            <label class="switch"><input type="checkbox" checked onchange="toggleDevice('irr',this.checked)"><span class="slider"></span></label>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg2);border-radius:var(--radius);">
+            <span>🌪️ ${t('通风系统')}</span>
+            <label class="switch"><input type="checkbox" onchange="toggleDevice('vent',this.checked)"><span class="slider"></span></label>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg2);border-radius:var(--radius);">
+            <span>💡 ${t('补光系统')}</span>
+            <label class="switch"><input type="checkbox" checked onchange="toggleDevice('light',this.checked)"><span class="slider"></span></label>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg2);border-radius:var(--radius);">
+            <span>🌡️ ${t('温控系统')}</span>
+            <label class="switch"><input type="checkbox" checked onchange="toggleDevice('climate',this.checked)"><span class="slider"></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">📋 实时日志</div><div id="logPanel" style="height:200px;overflow:auto;font-size:12px;"></div></div>`;
+
+    // 趋势图
+    const dom=$('#chartTrend');
+    const myChart=echarts.init(dom,null,{renderer:'svg'});
+    const opt={
+      tooltip:{trigger:'axis'},
+      grid:{left:40,right:20,top:20,bottom:30},
+      xAxis:{type:'category',data:[0,1,2,3,4,5,6,7,8,9].map(i=>i+' min')},
+      yAxis:{type:'value',min:20,max:35},
+      series:[
+        {name:'温度',type:'line',smooth:!0,data:[28,28.2,28.5,28.3,28.6,28.4,28.7,28.5,28.8,28.5],lineStyle:{color:'#00c853',width:3}},
+        {name:'湿度',type:'line',smooth:!0,data:[65,64,66,65,67,66,65,64,65,65],lineStyle:{color:'#0a84ff',width:3}}
+      ]
+    };
+    myChart.setOption(opt);
+    window.addEventListener('resize',()=>myChart.resize());
+
+    // 模拟实时数据
+    setInterval(()=>{
+      ['airTemp','humidity','ph'].forEach(id=>{
+        const el=$(`#${id}`);
+        const v=+el.textContent;
+        const nv=(v+(Math.random()-.5)*.2).toFixed(id==='ph'?1:1);
+        el.textContent=nv;
+      });
+    },3000);
+
+    // 日志
+    store.sub(s=>{
+      $('#logPanel').innerHTML=s.logs.slice(-20).map(l=>`<div>${l.ts} - ${l.msg||JSON.stringify(l)}</div>`).join('');
+    });
+  }
+
+  /* ---------- 设备孪生 ---------- */
+  function importDevice(){
+    $('#content').innerHTML=`
+    <div class="card"><div class="card-title">🚁 无人机实时状态</div>
+      <div class="grid cols-3">
+        <div class="metric"><div class="value" id="bat">85</div><div class="label">电池 %</div></div>
+        <div class="metric"><div class="value" id="sig">-45</div><div class="label">信号 dBm</div></div>
+        <div class="metric"><div class="value" id="spd">12</div><div class="label">速度 m/s</div></div>
+      </div>
+      <div class="chart" id="3d"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="btn" onclick="sendCommand('takeoff')">🛫 起飞</button>
+        <button class="btn" onclick="sendCommand('land')">🛬 降落</button>
+        <button class="btn" onclick="sendCommand('return')">🏠 返航</button>
+        <button class="btn danger" onclick="sendCommand('stop')">⏹ 急停</button>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">🧩 传感器拓扑</div>
+      <div id="topo" class="chart"></div>
+    </div>`;
+
+    // 3D 地块
+    const threeDom=$('#3d');
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(60,threeDom.clientWidth/threeDom.clientHeight,0.1,1000);
+    const renderer=new THREE.WebGLRenderer({antialias:!0,alpha:!0});
+    renderer.setSize(threeDom.clientWidth,260);threeDom.appendChild(renderer.domElement);
+    const geo=new THREE.PlaneGeometry(10,10,10,10);
+    const mat=new THREE.MeshBasicMaterial({color:0x00c853,wireframe:!0});
+    const plane=new THREE.Mesh(geo,mat);plane.rotation.x=-Math.PI/2;scene.add(plane);
+    camera.position.set(5,8,5);camera.lookAt(0,0,0);
+    function animate(){requestAnimationFrame(animate);plane.rotation.z+=.002;renderer.render(scene,camera);}
+    animate();window.addEventListener('resize',()=>{camera.aspect=threeDom.clientWidth/260;camera.updateProjectionMatrix();renderer.setSize(threeDom.clientWidth,260)});
+  }
+
+  /* ---------- GIS 地图 ---------- */
+  function importMap(){
+    $('#content').innerHTML=`<div class="card" style="padding:0;"><div id="map" style="height:70vh;"></div></div>`;
+    const map=L.map('map').setView([31.2,121.5],16);
+    L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',{subdomains:'1234'}).addTo(map);
+    L.marker([31.2,121.5]).addTo(map).bindPopup('试验田 A');
+    map.on('click',e=>{
+      L.marker([e.latlng.lat,e.latlng.lng]).addTo(map).bindPopup(`新标记 ${e.latlng.lat.toFixed(5)},${e.latlng.lng.toFixed(5)}`);
+    });
+  }
+
+  /* ---------- AI 诊断 ---------- */
+  function importAI(){
+    $('#content').innerHTML=`
+    <div class="grid cols-2">
+      <div class="card"><div class="card-title">📷 拍照/上传诊断</div>
+        <input type="file" accept="image/*" onchange="diagnose(this)">
+        <div id="aiRes" style="margin-top:12px;"></div>
+      </div>
+      <div class="card"><div class="card-title">🧠 模型指标</div>
+        <div class="chart" id="aiChart"></div>
+      </div>
+    </div>`;
+    const chart=echarts.init($('#aiChart'));
+    chart.setOption({series:[{type:'gauge',startAngle:180,endAngle:0,min:0,max:100,splitNumber:5,axisLine:{lineStyle:{width:6,color:[[.3,'#ff3b30'],[.7,'#ffcc00'],[1,'#00c853']]}},pointer:{icon:'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',length:'12%',width:20,offsetCenter:[0,'-60%'],itemStyle:{color:'auto'}},axisTick:{distance:-30,length:8,lineStyle:{color:'#fff',width:2}},splitLine:{distance:-30,length:30,lineStyle:{color:'#fff',width:4}},axisLabel:{color:'auto',distance:40,fontSize:16},detail:{valueAnimation:!0,formatter:'{value}%',color:'auto',fontSize:30,offsetCenter:[0,'0%']},data:[{value:92,name:'准确率'}]}]});
+  }
+  async function diagnose(input){
+    const file=input.files[0];if(!file)return;
+    const url=URL.createObjectURL(file);
+    $('#aiRes').innerHTML=`<img src="${url}" style="width:100%;border-radius:var(--radius)"><div style="margin-top:12px">🤖 诊断中...</div>`;
+    await sleep(1500);
+    $('#aiRes').innerHTML=`<div style="color:var(--primary)">✅ 健康指数：92% <br>📝 建议：叶片轻微缺镁，建议补充 MgSO₄</div>`;
+  }
+
+  /* ---------- 经济测算 ---------- */
+  function importEconomy(){
+    $('#content').innerHTML=`
+    <div class="grid cols-2">
+      <div class="card"><div class="card-title">💰 收益预测</div>
+        <div class="form-group"><label>面积（亩）</label><input id="area" type="number" value="100"></div>
+        <div class="form-group"><label>单产（kg/亩）</label><input id="yield" type="number" value="600"></div>
+        <div class="form-group"><label>收购价（元/kg）</label><input id="price" type="number" value="3.2"></div>
+        <button class="btn" onclick="calc()">计算</button>
+        <div id="ecoRes" style="margin-top:12px;"></div>
+      </div>
+      <div class="card"><div class="card-title">📊 成本结构</div><div id="ecoChart" class="chart"></div></div>
+    </div>`;
+    const chart=echarts.init($('#ecoChart'));
+    chart.setOption({tooltip:{trigger:'item'},series:[{type:'pie',radius:['40%','70%'],data:[{value:35,name:'化肥'},{value:28,name:'种子'},{value:20,name:'人工'},{value:10,name:'水电'},{value:7,name:'其他'}]}]});
+  }
+  function calc(){
+    const a=+$('#area').value,y=+$('#yield').value,p=+$('#price').value;
+    const income=a*y*p;
+    const cost=a*(400+280+200+100+70);
+    const profit=income-cost;
+    $('#ecoRes').innerHTML=`<div style="font-size:20px;color:var(--primary)">预计净收益：¥${profit.toFixed(0)} 元</div>`;
+  }
+
+  /* ---------- 农事日历 ---------- */
+  function importCalendar(){
+    $('#content').innerHTML=`<div class="card"><div id="calendar" style="height:70vh;"></div></div>`;
+    const cal=new FullCalendar.Calendar($('#calendar'),{
+      initialView:'dayGridMonth',locale:store.get('lang')==='zh'?'zh-cn':'en',
+      headerToolbar:{start:'title',center:'',end:'today prev,next'},
+      events:[
+        {title:'播种',date:'2025-06-01',color:'#00c853'},
+        {title:'施肥',date:'2025-06-10',color:'#ffcc00'},
+        {title:'无人机巡检',date:'2025-06-15',color:'#0a84ff'}
+      ]
+    });cal.render();
+  }
+
+  /* ---------- 库存 / 溯源 ---------- */
+  function importStock(){
+    $('#content').innerHTML=`
+    <div class="card"><div class="card-title">📦 库存列表</div>
+      <table>
+        <thead><tr><th>批次</th><th>品名</th><th>数量</th><th>时间</th><th>溯源码</th></tr></thead>
+        <tbody id="stockBody"></tbody>
+      </table>
+    </div>
+    <div class="card"><div class="card-title">📱 扫码溯源</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <video id="qrVideo" style="width:300px;border-radius:var(--radius)"></video>
+        <div>
+          <button class="btn" onclick="startScan()">开始扫码</button>
+          <div id="scanRes"></div>
+        </div>
+      </div>
+    </div>`;
+    // 模拟库存
+    const list=Array.from({length:6},(_,i)=>({batch:'B'+String(i+1).padStart(3,'0'),name:'有机黄瓜',qty:Math.floor(Math.random()*50+20)+' kg',date:new Date().toLocaleDateString(),trace:Math.random().toString(36).slice(2,10).toUpperCase()}));
+    $('#stockBody').innerHTML=list.map(l=>`<tr><td>${l.batch}</td><td>${l.name}</td><td>${l.qty}</td><td>${l.date}</td><td><button class="btn" onclick="showQR('${l.trace}')">查看</button></td></tr>`).join('');
+  }
+  function showQR(code){
+    const d=document.createElement('div');d.className='modal show';d.innerHTML=`<div class="modal-content"><span onclick="this.closest('.modal').remove()" style="float:right;cursor:pointer;">✖</span><div id="qrcode"></div><div style="text-align:center;margin-top:12px">${code}</div></div>`;document.body.appendChild(d);new QRCode(d.querySelector('#qrcode'),{text:code,width:200,height:200});
+  }
+  async function startScan(){
+    const v=$('#qrVideo');const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});v.srcObject=s;v.play();
+    const canvas=document.createElement('canvas');const ctx=canvas.getContext('2d');
+    const scan=()=>{canvas.width=v.videoWidth;canvas.height=v.videoHeight;ctx.drawImage(v,0,0);const img=ctx.getImageData(0,0,canvas.width,canvas.height);const code=jsQR(img.data,canvas.width,canvas.height);if(code){$('#scanRes').innerHTML=`扫码结果：${code.data}`;s.getTracks().forEach(t=>t.stop());return;}requestAnimationFrame(scan);};
+    await sleep(500);scan();
+  }
+
+  /* ---------- 报表中心 ---------- */
+  function importReport(){
+    $('#content').innerHTML=`
+    <div class="card"><div class="card-title">📈 年度报表</div>
+      <div class="chart" id="reportChart"></div>
+      <div style="margin-top:12px;text-align:center;">
+        <button class="btn" onclick="print()">打印</button>
+        <button class="btn" onclick="exportExcel()">导出 Excel</button>
+      </div>
+    </div>`;
+    const chart=echarts.init($('#reportChart'));
+    chart.setOption({legend:{},tooltip:{},dataset:{source:[['product','2023','2024','2025'],['小麦',230,245,260],['玉米',180,195,210],['大豆',90,95,105]]},xAxis:{type:'category'},yAxis:{},series:[{type:'bar'},{type:'bar'},{type:'bar'}]});
+  }
+
+  /* ---------- 系统设置 ---------- */
+  function importSetting(){
+    $('#content').innerHTML=`
+    <div class="card"><div class="card-title">⚙️ 偏好设置</div>
+      <div class="form-group"><label>WebSocket 地址</label><input id="wsInput" value="${store.get('wsUrl')}"></div>
+      <button class="btn" onclick="saveWS()">保存</button>
+    </div>
+    <div class="card"><div class="card-title">🧪 实验室</div>
+      <button class="btn" onclick="vibrate()">震动测试</button>
+      <button class="btn" onclick="wakeLock()">常亮屏幕</button>
+      <button class="btn" onclick="copyLogs()">复制日志</button>
+      <button class="btn danger" onclick="clearData()">清除本地数据</button>
+    </div>`;
+  }
+  function saveWS(){store.set({wsUrl:$('#wsInput').value});toast('已保存');}
+  function vibrate(){if(navigator.vibrate)navigator.vibrate(200);}
+  async function wakeLock(){if('wakeLock' in navigator){const w=await navigator.wakeLock.request('screen');toast('已常亮');}}
+  function copyLogs(){navigator.clipboard.writeText(JSON.stringify(store.get('logs'),null,2));toast('已复制');}
+  function clearData(){if(confirm('确定清除？')){localStorage.clear();location.reload();}}
+  </script>
+
+  <!--  =====  额外依赖：QR 扫描  =====  -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1/dist/jsQR.js"></script>
+</body>
+</html>
